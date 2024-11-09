@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/contact.dart';
 import '../services/contact_service.dart';
 
 class ContactFormScreen extends StatefulWidget {
   final Contact? contact;
-  ContactFormScreen({this.contact});
+  const ContactFormScreen({this.contact});
 
   @override
   _ContactFormScreenState createState() => _ContactFormScreenState();
@@ -13,22 +12,46 @@ class ContactFormScreen extends StatefulWidget {
 
 class _ContactFormScreenState extends State<ContactFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  late String _name;
-  late String _phone;
-  late String _email;
+  final _contactService = ContactService();
+  late String _name, _phone, _email;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.contact != null) {
+      _name = widget.contact!.nome;
+      _phone = widget.contact!.telefone;
+      _email = widget.contact!.email;
+    } else {
+      _name = '';
+      _phone = '';
+      _email = '';
+    }
+  }
+
+  void _saveContact() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      final contact = Contact(
+        id: widget.contact?.id,
+        nome: _name,
+        telefone: _phone,
+        email: _email,
+      );
+      if (widget.contact == null) {
+        await _contactService.addContact(contact);
+      } else {
+        await _contactService.updateContact(contact);
+      }
+      Navigator.pop(context, true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.contact == null ? 'Novo Contato' : 'Editar Contato'),
-        actions: [
-          if (widget.contact != null)
-            IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: _deleteContact,
-            )
-        ],
+        title: Text(widget.contact == null ? 'Add Contact' : 'Edit Contact'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -37,72 +60,29 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
           child: Column(
             children: [
               TextFormField(
-                initialValue: widget.contact?.nome ?? '',
-                decoration: InputDecoration(labelText: 'Nome'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'O nome é obrigatório';
-                  }
-                  return null;
-                },
+                initialValue: _name,
+                decoration: const InputDecoration(labelText: 'Name'),
                 onSaved: (value) => _name = value!,
               ),
               TextFormField(
-                initialValue: widget.contact?.telefone ?? '',
-                decoration: InputDecoration(labelText: 'Telefone'),
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(11),
-                ],
-                validator: (value) {
-                  if (value == null || value.length != 11) {
-                    return 'Digite um telefone válido (11 dígitos)';
-                  }
-                  return null;
-                },
+                initialValue: _phone,
+                decoration: const InputDecoration(labelText: 'Phone'),
                 onSaved: (value) => _phone = value!,
               ),
               TextFormField(
-                initialValue: widget.contact?.email ?? '',
-                decoration: InputDecoration(labelText: 'E-mail'),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || !value.contains('@')) {
-                    return 'Digite um e-mail válido';
-                  }
-                  return null;
-                },
+                initialValue: _email,
+                decoration: const InputDecoration(labelText: 'Email'),
                 onSaved: (value) => _email = value!,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveContact,
-                child: Text('Salvar'),
+                child: Text(widget.contact == null ? 'Save' : 'Update'),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _saveContact() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      if (widget.contact == null) {
-        ContactService.addContact(Contact(nome: _name, telefone: _phone, email: _email));
-      } else {
-        ContactService.updateContact(widget.contact!.copyWith(nome: _name, telefone: _phone, email: _email));
-      }
-      Navigator.of(context).pop();
-    }
-  }
-
-  void _deleteContact() {
-    if (widget.contact != null) {
-      ContactService.deleteContact(widget.contact!);
-      Navigator.of(context).pop();
-    }
   }
 }

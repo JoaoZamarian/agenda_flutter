@@ -1,24 +1,26 @@
+import '../database_helper.dart';
 import '../models/contact.dart';
 
 class ContactService {
-  static final List<Contact> _contacts = [];
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  static Future<List<Contact>> getContacts() async {
-    return _contacts;
+  // Método para obter a lista de contatos
+  Future<List<Contact>> getContacts() async {
+    return await _dbHelper.getContacts();
   }
 
-  static Future<void> addContact(Contact contact) async {
-    _contacts.add(contact);
+  // Método para adicionar um novo contato
+  Future<void> addContact(Contact contact) async {
+    await _dbHelper.insertContact(contact);
   }
 
-  static Future<void> updateContact(Contact updatedContact) async {
-    int index = _contacts.indexWhere((c) => c.nome == updatedContact.nome);
-    if (index != -1) {
-      _contacts[index] = updatedContact;
-    }
+  // Método para atualizar um contato existente
+  Future<void> updateContact(Contact contact) async {
+    await _dbHelper.updateContact(contact);
   }
 
-  static Future<void> deleteContact(Contact contact) async {
-    _contacts.remove(contact);
+  // Método para deletar um contato
+  Future<void> deleteContact(int id) async {
+    await _dbHelper.deleteContact(id);
   }
 }

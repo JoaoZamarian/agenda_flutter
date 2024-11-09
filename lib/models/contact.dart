@@ -1,15 +1,33 @@
 class Contact {
+  int? id;  // `id` é opcional, pois ele pode não estar definido antes de ser salvo no banco de dados
   String nome;
   String telefone;
   String email;
 
-  Contact({required this.nome, required this.telefone, required this.email});
+  Contact({
+    this.id,
+    required this.nome,
+    required this.telefone,
+    required this.email,
+  });
 
-  Contact copyWith({String? nome, String? telefone, String? email}) {
+  // Converte um objeto Contact em um Map para salvar no banco
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': nome,
+      'phone': telefone,
+      'email': email,
+    };
+  }
+
+  // Cria um objeto Contact a partir de um Map
+  factory Contact.fromMap(Map<String, dynamic> map) {
     return Contact(
-      nome: nome = this.nome,
-      telefone: telefone = this.telefone,
-      email: email = this.email,
+      id: map['id'] as int?,  // `id` é opcional
+      nome: map['name'] as String,
+      telefone: map['phone'] as String,
+      email: map['email'] as String,
     );
   }
 }
